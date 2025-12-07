@@ -7,7 +7,7 @@ const createUserToDB = async (payload: Record<string, unknown>) => {
   const { name, email, password, phone, role } = payload;
   const hashedPassword = await bcrypt.hash(
     password as string,
-    config.bcryptSalt
+    config.bcryptSalt as string
   );
   const result = await pool.query(
     `INSERT INTO users(name,email,password,phone,role)VALUES($1,$2,$3,$4,$5) RETURNING id,name,email,phone,role`,
@@ -17,9 +17,10 @@ const createUserToDB = async (payload: Record<string, unknown>) => {
 };
 const loginUserToDB = async (email: string, password: string) => {
   // find user by email
-  const result = await pool.query(`SELECT * FROM users WHERE email=$1`, [
-    email,
-  ]);
+  const result = await pool.query(
+    `SELECT id, name, email, phone, role  FROM users WHERE email=$1`,
+    [email]
+  );
   // if there are no user
   if (result.rows.length === 0) {
     return null;
@@ -39,6 +40,7 @@ const loginUserToDB = async (email: string, password: string) => {
   const token = jwt.sign(payload, config.jwtSecret as string, {
     expiresIn: "7d",
   });
+
   return { token, user };
 };
 
