@@ -89,10 +89,33 @@ const updateVehicleFromDB = async (req: Request, res: Response) => {
     });
   }
 };
+const deleteVehicle = async (req: Request, res: Response) => {
+  try {
+    const vehicleId = req.params.vehicleId as string;
+    const role = req.user?.role;
+    if (role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin only.",
+      });
+    }
+    const result = await vehicleService.deleteVehicleFromDB(vehicleId);
+    res.status(200).json({
+      success: true,
+      message: "Vehicle deleted successfully",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 export const vehicleController = {
   addVehicle,
   getAllVehicles,
   getSingleVehicle,
   updateVehicleFromDB,
+  deleteVehicle,
 };

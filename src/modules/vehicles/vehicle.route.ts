@@ -11,4 +11,5 @@ router.patch(
   auth("admin"),
   vehicleController.updateVehicleFromDB
 );
+router.delete("/:vehicleId", auth("admin"), vehicleController.deleteVehicle);
 export const vehicleRouter = router;
