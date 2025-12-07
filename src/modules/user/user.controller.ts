@@ -41,4 +41,28 @@ const updateUser = async (req: Request, res: Response) => {
     });
   }
 };
-export const userController = { getAllUsers, updateUser };
+const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params?.userId as string;
+
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin only.",
+      });
+    }
+
+    await userService.deleteUserFromDB(userId);
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const userController = { getAllUsers, updateUser, deleteUser };

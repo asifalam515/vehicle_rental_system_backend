@@ -22,5 +22,22 @@ const updateUserInDB = async (
   );
   return result;
 };
+const deleteUserFromDB = async (userId: string) => {
+  const userCheck = await pool.query(`SELECT id FROM users WHERE id=$1`, [
+    userId,
+  ]);
+  if (userCheck.rows.length === 0) {
+    throw new Error("User not found");
+  }
+  const activeBooking = await pool.query(
+    `SELECT id FROM bookings WHERE customer_id=$1 AND status='active'`,
+    [userId]
+  );
+  if (activeBooking.rows.length > 0) {
+    throw new Error("Cannot delete user with active bookings");
+  }
+  const result = await pool.query(`DELETE FROM users WHERE id=$1`, [userId]);
+  return result;
+};
 
-export const userService = { getUsersFromDB, updateUserInDB };
+export const userService = { getUsersFromDB, updateUserInDB, deleteUserFromDB };
