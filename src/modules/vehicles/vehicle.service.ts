@@ -32,5 +32,22 @@ const getAllVehiclesFromDB = async () => {
      FROM vehicles`);
   return result;
 };
-
-export const vehicleService = { addVehicleToDB, getAllVehiclesFromDB };
+const getSingleVehicleFromDB = async (vehicleId: string) => {
+  const result = await pool.query(
+    `  SELECT
+      id,
+      vehicle_name,
+      type,
+      registration_number,
+      daily_rent_price,
+      availability_status
+     FROM vehicles WHERE id=$1`,
+    [vehicleId]
+  );
+  return result;
+};
+export const vehicleService = {
+  addVehicleToDB,
+  getAllVehiclesFromDB,
+  getSingleVehicleFromDB,
+};
