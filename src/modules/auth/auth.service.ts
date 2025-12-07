@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import config from "../../config";
 import { pool } from "../../config/db";
+import { JwtPayload } from "./../../../node_modules/@types/jsonwebtoken/index.d";
 const createUserToDB = async (payload: Record<string, unknown>) => {
   const { name, email, password, phone, role } = payload;
   const hashedPassword = await bcrypt.hash(
@@ -13,5 +15,28 @@ const createUserToDB = async (payload: Record<string, unknown>) => {
   );
   return result;
 };
+const loginUserToDB = async (email: string, password: string) => {
+  // find user by email
+  const result = await pool.query(`SELECT * FROM users WHERE email=$1`, [
+    email,
+  ]);
+  // if there are no user
+  if (result.rows.length === 0) {
+    return null;
+  }
+  // if there are user then check his password
+  const user = result.rows[0];
+  const isMatched = await bcrypt.compare(password, user.password);
+  if (!isMatched) {
+    return false;
+  }
+  const payload = {
+    email: user.email,
+    password: user.password,
+  } as JwtPayload;
+  //create token by jwt
+  const token = jwt.sign(payload, config.jwtSecret as string);
+  console.log(token);
+};
 
-export const authService = { createUserToDB };
+export const authService = { createUserToDB, loginUserToDB };
