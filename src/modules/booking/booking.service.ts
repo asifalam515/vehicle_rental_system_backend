@@ -107,4 +107,54 @@ const getAllBookingsFromDB = async (role: string, customerId: string) => {
 
   return finalData;
 };
-export const bookingService = { createBookingToDB, getAllBookingsFromDB };
+const updateBookingInDB = async (
+  bookingId: string,
+  newStatus: string,
+  role: string,
+  customerId: string
+) => {
+  const bookingRes = await pool.query(`SELECT * FROM bookings WHERE id=$1`, [
+    bookingId,
+  ]);
+  if (bookingRes.rows.length === 0) {
+    throw new Error("Booking not found");
+  }
+  const booking = bookingRes.rows[0];
+  // role
+  if (role === "customer") {
+    if (booking.customer_id !== Number(customerId)) {
+      throw new Error("You don't have access to update others");
+    }
+    if (newStatus !== "cancelled") {
+      throw new Error("Customers can only cancel their bookings");
+    }
+  }
+  if (role === "admin") {
+    if (newStatus !== "returned" && newStatus !== "cancelled") {
+      throw new Error("Invalid status for admin");
+    }
+  }
+  const updateRes = await pool.query(
+    `UPDATE bookings SET status=$1 WHERE id=$2 RETURNING *`,
+    [newStatus, bookingId]
+  );
+  const updatedBooking = updateRes.rows[0];
+  let vehicleUpdate = null;
+
+  if (role === "admin" && newStatus === "returned") {
+    vehicleUpdate = await pool.query(
+      `UPDATE vehicles SET availability_status='available' WHERE id=$1 RETURNING availability_status`,
+      [booking.vehicle_id]
+    );
+  }
+  return {
+    ...updatedBooking,
+    vehicle: vehicleUpdate ? vehicleUpdate.rows[0] : undefined,
+  };
+};
+
+export const bookingService = {
+  createBookingToDB,
+  getAllBookingsFromDB,
+  updateBookingInDB,
+};
