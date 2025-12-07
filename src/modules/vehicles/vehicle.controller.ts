@@ -75,7 +75,6 @@ const updateVehicle = async (req: Request, res: Response) => {
       availability_status,
     } = req.body;
 
-    // PUT must require all fields
     if (
       !vehicle_name ||
       !type ||
@@ -90,7 +89,6 @@ const updateVehicle = async (req: Request, res: Response) => {
       });
     }
 
-    // 1️⃣ Check if vehicle exists
     const existCheck = await pool.query(
       "SELECT id FROM vehicles WHERE id = $1",
       [vehicleId]
@@ -103,7 +101,6 @@ const updateVehicle = async (req: Request, res: Response) => {
       });
     }
 
-    // 2️⃣ Update vehicle
     const updatedVehicle = await vehicleService.updateVehicleFromDB(
       req.body,
       vehicleId as string
