@@ -51,20 +51,60 @@ const createBookingToDB = async (payload: Record<string, unknown>) => {
   };
   return finalData;
 };
+// const getAllBookingsFromDB = async (role: string, customerId: string) => {
+//   if (role === "admin") {
+//     // show all
+//     const result = await pool.query(`SELECT * FROM bookings`);
+
+//     return result.rows;
+//   } else {
+//     // customer will only shown his own bookings
+//     // we will search by email/customerId query
+//     const result = await pool.query(
+//       `SELECT * FROM bookings WHERE customer_id=$1`,
+//       [customerId]
+//     );
+//     return result.rows;
+//   }
+// };
 const getAllBookingsFromDB = async (role: string, customerId: string) => {
+  let bookingsResult;
+
   if (role === "admin") {
-    // show all
-    const result = await pool.query(`SELECT * FROM bookings`);
-    return result.rows;
+    bookingsResult = await pool.query(
+      `SELECT * FROM bookings ORDER BY id DESC`
+    );
   } else {
-    // customer will only shown his own bookings
-    // we will search by email/customerId query
-    const result = await pool.query(
-      `SELECT * FROM bookings WHERE customer_id=$1`,
+    bookingsResult = await pool.query(
+      `SELECT * FROM bookings WHERE customer_id = $1 ORDER BY id DESC`,
       [customerId]
     );
-    return result.rows;
   }
-};
 
+  const bookings = bookingsResult.rows;
+  const finalData = [];
+
+  for (const booking of bookings) {
+    //get user/ customer info
+    const customerRes = await pool.query(
+      `SELECT name, email FROM users WHERE id = $1`,
+      [booking.customer_id]
+    );
+
+    //  vehicle info
+    const vehicleRes = await pool.query(
+      `SELECT vehicle_name, registration_number 
+         FROM vehicles WHERE id = $1`,
+      [booking.vehicle_id]
+    );
+
+    finalData.push({
+      ...booking,
+      customer: customerRes.rows[0] || null,
+      vehicle: vehicleRes.rows[0] || null,
+    });
+  }
+
+  return finalData;
+};
 export const bookingService = { createBookingToDB, getAllBookingsFromDB };
