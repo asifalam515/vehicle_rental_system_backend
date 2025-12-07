@@ -18,22 +18,22 @@ const createUserToDB = async (payload: Record<string, unknown>) => {
 const loginUserToDB = async (email: string, password: string) => {
   // find user by email
   const result = await pool.query(
-    `SELECT id, name, email, phone, role  FROM users WHERE email=$1`,
+    `SELECT id, name, email, phone, role,password  FROM users WHERE email=$1`,
     [email]
   );
   // if there are no user
   if (result.rows.length === 0) {
-    return null;
+    throw new Error("User not found");
   }
   // if there are user then check his password
   const user = result.rows[0];
   const isMatched = await bcrypt.compare(password, user.password);
   if (!isMatched) {
-    return false;
+    throw new Error("Incorrect password");
   }
   const payload = {
+    id: user.id,
     email: user.email,
-    password: user.password,
     role: user.role,
   } as JwtPayload;
   //create token by jwt
