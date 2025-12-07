@@ -33,10 +33,13 @@ const loginUserToDB = async (email: string, password: string) => {
   const payload = {
     email: user.email,
     password: user.password,
+    role: user.role,
   } as JwtPayload;
   //create token by jwt
-  const token = jwt.sign(payload, config.jwtSecret as string);
-  console.log(token);
+  const token = jwt.sign(payload, config.jwtSecret as string, {
+    expiresIn: "7d",
+  });
+  return { token, user };
 };
 
 export const authService = { createUserToDB, loginUserToDB };
