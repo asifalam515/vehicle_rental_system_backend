@@ -51,7 +51,7 @@ const createBookingToDB = async (payload: Record<string, unknown>) => {
   };
   return finalData;
 };
-// const getAllBookingsFromDB = async (role: string, customerId: string) => {
+
 //   if (role === "admin") {
 //     // show all
 //     const result = await pool.query(`SELECT * FROM bookings`);
