@@ -40,7 +40,7 @@ const loginUserToDB = async (email: string, password: string) => {
   const token = jwt.sign(payload, config.jwtSecret as string, {
     expiresIn: "7d",
   });
-
+  delete user.password;
   return { token, user };
 };
 
